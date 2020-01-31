@@ -20,9 +20,9 @@ class Clue:
 
         # Define buttons:
         self._a = digitalio.DigitalInOut(board.BUTTON_A)
-        self._a.switch_to_input(pull=digitalio.Pull.DOWN)
+        self._a.switch_to_input(pull=digitalio.Pull.UP)
         self._b = digitalio.DigitalInOut(board.BUTTON_B)
-        self._b.switch_to_input(pull=digitalio.Pull.DOWN)
+        self._b.switch_to_input(pull=digitalio.Pull.UP)
 
         # Define LEDs:
         self._white_leds = digitalio.DigitalInOut(board.WHITE_LEDS)
@@ -63,7 +63,7 @@ class Clue:
 
         To use with the CLUE:
         """
-        return self._a.value
+        return not self._a.value
 
     @property
     def button_b(self):
@@ -71,7 +71,7 @@ class Clue:
 
         To use with the CLUE:
         """
-        return self._b.value
+        return not self._b.value
 
     @property
     def were_pressed(self):
