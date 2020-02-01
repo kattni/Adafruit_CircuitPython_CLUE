@@ -5,6 +5,8 @@ import board
 import busio
 import digitalio
 import audiobusio  # possibly audiocore or whatever
+import audiopwmio
+import audiocore
 import neopixel
 import adafruit_bmp280
 import adafruit_sht31d
@@ -34,8 +36,8 @@ class Clue:
         # Define audio:
         self._mic = audiobusio.PDMIn(board.MICROPHONE_CLOCK, board.MICROPHONE_DATA,
                                      sample_rate=16000, bit_depth=16)
-        self._speaker = digitalio.DigitalInOut(board.SPEAKER)
-        self._speaker.switch_to_output()
+        #self._speaker = digitalio.DigitalInOut(board.SPEAKER)
+        #self._speaker.switch_to_output()
         self._sample = None
         self._samples = None
         self._sine_wave = None
@@ -213,7 +215,7 @@ class Clue:
         if self._sample is not None:
             return
         self._sine_wave = array.array("H", self._sine_sample(length))
-        self._sample = self.audiopwmio.PWMAudioOut(board.SPEAKER)
+        self._sample = audiopwmio.PWMAudioOut(board.SPEAKER)
         self._sine_wave_sample = audiocore.RawSample(self._sine_wave)
 
     def play_tone(self, frequency, duration):
@@ -256,7 +258,6 @@ class Clue:
                  else:
                      .stop_tone()
         """
-        self._speaker_enable.value = True
         length = 100
         if length * frequency > 350000:
             length = 350000 // frequency
@@ -288,7 +289,6 @@ class Clue:
             self._sample.stop()
             self._sample.deinit()
             self._sample = None
-        self._speaker_enable.value = False
 
     @staticmethod
     def _normalized_rms(values):
