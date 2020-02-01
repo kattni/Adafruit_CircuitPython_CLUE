@@ -2,7 +2,6 @@ import time
 import array
 import math
 import board
-import busio
 import digitalio
 import audiobusio
 import audiopwmio
@@ -15,7 +14,8 @@ import adafruit_lis3mdl
 import adafruit_lsm6ds
 import gamepad
 
-class Clue:
+class Clue:  # pylint: disable=too-many-instance-attributes, too-many-public-methods
+    """Represents a single CLUE."""
     def __init__(self):
         # Define I2C:
         self._i2c = board.I2C()
@@ -25,6 +25,7 @@ class Clue:
         self._a.switch_to_input(pull=digitalio.Pull.UP)
         self._b = digitalio.DigitalInOut(board.BUTTON_B)
         self._b.switch_to_input(pull=digitalio.Pull.UP)
+        self._gamepad = gamepad.GamePad(self._a, self._b)
 
         # Define LEDs:
         self._white_leds = digitalio.DigitalInOut(board.WHITE_LEDS)
@@ -36,8 +37,8 @@ class Clue:
         # Define audio:
         self._mic = audiobusio.PDMIn(board.MICROPHONE_CLOCK, board.MICROPHONE_DATA,
                                      sample_rate=16000, bit_depth=16)
-        #self._speaker = digitalio.DigitalInOut(board.SPEAKER)
-        #self._speaker.switch_to_output()
+        self._speaker = digitalio.DigitalInOut(board.SPEAKER)
+        self._speaker.switch_to_output()
         self._sample = None
         self._samples = None
         self._sine_wave = None
@@ -92,7 +93,7 @@ class Clue:
               print(.were_pressed)
         """
         ret = set()
-        pressed = self.gamepad.get_pressed()
+        pressed = self._gamepad.get_pressed()
         for button, mask in (('A', 0x01), ('B', 0x02)):
             if mask & pressed:
                 ret.add(button)
@@ -212,6 +213,7 @@ class Clue:
 
     @property
     def pixel(self):
+        """The NeoPixel RGB LED."""
         return self._pixel
 
     @staticmethod
@@ -367,12 +369,12 @@ class Clue:
 
         return self.sound_level > sound_threshold
 
-clue = Clue()
+clue = Clue()  # pylint: disable=invalid-name
 """Object that is automatically created on import.
 
    To use, simply import it from the module:
 
    .. code-block:: python
 
-     from adafruit_clue.Clue import clue
+   from adafruit_clue import clue
 """
