@@ -4,7 +4,7 @@ import math
 import board
 import busio
 import digitalio
-import audiobusio  # possibly audiocore or whatever
+import audiobusio
 import audiopwmio
 import audiocore
 import neopixel
@@ -189,6 +189,16 @@ class Clue:
     @sea_level_pressure.setter
     def sea_level_pressure(self, value):
         self._pressure.sea_level_pressure = value
+
+    @property
+    def white_leds(self):
+        """The red led next to the USB plug labeled LED.
+        """
+        return self._white_leds.value
+
+    @white_leds.setter
+    def white_leds(self, value):
+        self._white_leds.value = value
 
     @property
     def red_led(self):
