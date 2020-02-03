@@ -63,19 +63,6 @@ class _DisplaySensorData:
 
         return sensor_data_label
 
-    @staticmethod
-    def format_text(sensor, data_label=None, format=None):
-        """Helper to formats a sensor value for display."""
-
-        if format:
-            text = format % sensor
-        else:
-            text = str(sensor)
-        if data_label:
-            text = data_label + text
-
-        return text
-
     def show(self):
         self._display.show(self.sensor_group)
 
