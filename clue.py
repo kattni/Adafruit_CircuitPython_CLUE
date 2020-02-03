@@ -13,19 +13,24 @@ import adafruit_apds9960.apds9960
 import adafruit_lis3mdl
 import adafruit_lsm6ds
 import gamepad
+import touchio
 
-class _DisplaySensorData:
+class _DisplayClueData:
     """Display sensor data."""
     def __init__(self, title="Clue Sensor Data", title_color=0xFFFFFF, title_scale=1,
-                 sensor_scale=1, font=None, num_sensors=1, colors=None):
+                 clue_data_scale=1, font=None, num_lines=1, colors=None):
         import displayio
         import terminalio
         from adafruit_display_text import label
 
         if not colors:
             colors = (0xFF00FF, 0x00FF00, 0xFF0000, 0x00FFFF, 0xFFFF00,
+                      0x0000FF, 0xFF00CC, 0x00AAFF, 0xFFA500, 0xCC00FF,
+                      0xFF00FF, 0x00FF00, 0xFF0000, 0x00FFFF, 0xFFFF00,
                       0x0000FF, 0xFF00CC, 0x00AAFF, 0xFFA500, 0xCC00FF)
             # colors = ((255, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255), (255, 255, 0),
+            #           (0, 0, 255), (255, 0, 180), (0, 180, 255), (255, 180, 0), (180, 0, 255),
+            #           (255, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255), (255, 255, 0),
             #           (0, 0, 255), (255, 0, 180), (0, 180, 255), (255, 180, 0), (180, 0, 255))
 
         self._label = label
@@ -43,11 +48,11 @@ class _DisplaySensorData:
         title.y = 8
         self._y = title.y + 20
 
-        self.sensor_group = displayio.Group(max_size=20, scale=sensor_scale)
+        self.sensor_group = displayio.Group(max_size=20, scale=clue_data_scale)
         self.sensor_group.append(title)
 
         self._lines = []
-        for num in range(num_sensors):
+        for num in range(num_lines):
             self._lines.append(self.add_text_line(color=colors[num]))
 
     def __getitem__(self, item):
@@ -57,13 +62,13 @@ class _DisplaySensorData:
     def add_text_line(self, color=0xFFFFFF):
         """Adds a line on the display of the specified color and returns the label object."""
 
-        sensor_data_label = self._label.Label(self._font, text="", max_glyphs=45, color=color)
-        sensor_data_label.x = 0
-        sensor_data_label.y = self._y
-        self._y = sensor_data_label.y + 13
-        self.sensor_group.append(sensor_data_label)
+        clue_data_label = self._label.Label(self._font, text="", max_glyphs=45, color=color)
+        clue_data_label.x = 0
+        clue_data_label.y = self._y
+        self._y = clue_data_label.y + 13
+        self.sensor_group.append(clue_data_label)
 
-        return sensor_data_label
+        return clue_data_label
 
     def show(self):
         self._display.show(self.sensor_group)
@@ -77,6 +82,15 @@ class Clue:  # pylint: disable=too-many-instance-attributes, too-many-public-met
     def __init__(self):
         # Define I2C:
         self._i2c = board.I2C()
+
+        # Define touch:
+        # Initially, self._touches stores the pin used for a particular touch. When that touch is
+        # used for the first time, the pin is replaced with the corresponding TouchIn object.
+        # This saves a little RAM over using a separate read-only pin tuple.
+        # For example, after `clue.touch_2`, self._touches is equivalent to:
+        # [board.D0, board.D1, touchio.TouchIn(board.D2)]
+        self._touches = [board.D0, board.D1, board.D2]
+        self._touch_threshold_adjustment = 0
 
         # Define buttons:
         self._a = digitalio.DigitalInOut(board.BUTTON_A)
@@ -117,6 +131,71 @@ class Clue:  # pylint: disable=too-many-instance-attributes, too-many-public-met
 
         # Barometric pressure sensor:
         self._pressure = adafruit_bmp280.Adafruit_BMP280_I2C(self._i2c)
+
+    def _touch(self, i):
+        if not isinstance(self._touches[i], touchio.TouchIn):
+            # First time referenced. Get the pin from the slot for this touch
+            # and replace it with a TouchIn object for the pin.
+            self._touches[i] = touchio.TouchIn(self._touches[i])
+            self._touches[i].threshold += self._touch_threshold_adjustment
+        return self._touches[i].value
+
+    @property
+    def touch_0(self):
+        """Detect touch on capacitive touch pad 0.
+
+        .. image :: ../docs/_static/capacitive_touch_pad_0.jpg
+          :alt: Capacitive touch pad 0
+
+        To use with the CLUE:
+
+        .. code-block:: python
+
+          from adafruit_clue import clue
+
+          while True:
+              if clue.touch_0:
+                  print('Touched pad 0')
+        """
+        return self._touch(0)
+
+    @property
+    def touch_1(self):
+        """Detect touch on capacitive touch pad 1.
+
+        .. image :: ../docs/_static/capacitive_touch_pad_1.jpg
+          :alt: Capacitive touch pad 1
+
+        To use with the CLUE:
+
+        .. code-block:: python
+
+          from adafruit_clue import clue
+
+          while True:
+              if clue.touch_1:
+                  print('Touched pad 1')
+        """
+        return self._touch(1)
+
+    @property
+    def touch_2(self):
+        """Detect touch on capacitive touch pad 2.
+
+        .. image :: ../docs/_static/capacitive_touch_pad_2.jpg
+          :alt: Capacitive touch pad 2
+
+        To use with the CLUE:
+
+        .. code-block:: python
+
+          from adafruit_clue import clue
+
+          while True:
+              if clue.touch_2:
+                  print('Touched pad 2')
+        """
+        return self._touch(2)
 
     @property
     def button_a(self):
@@ -428,11 +507,11 @@ class Clue:  # pylint: disable=too-many-instance-attributes, too-many-public-met
         return self.sound_level > sound_threshold
 
     @staticmethod
-    def display_sensor_data(title="Clue Sensor Data", title_color=(255,255,255), title_scale=1,
-                            num_sensors=1, sensor_scale=1, font=None, colors=None):
-        return _DisplaySensorData(title=title, title_color=title_color, title_scale=title_scale,
-                                  sensor_scale=sensor_scale, font=font, num_sensors=num_sensors,
-                                  colors=colors)
+    def display_clue_data(title="Clue Sensor Data", title_color=(255,255,255), title_scale=1,
+                            num_lines=1, clue_data_scale=1, font=None, colors=None):
+        return _DisplayClueData(title=title, title_color=title_color, title_scale=title_scale,
+                                num_lines=num_lines, clue_data_scale=clue_data_scale, font=font,
+                                colors=colors)
 
 
 clue = Clue()  # pylint: disable=invalid-name
