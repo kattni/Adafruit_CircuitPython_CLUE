@@ -14,6 +14,49 @@ import adafruit_lis3mdl
 import adafruit_lsm6ds
 import gamepad
 
+class _DisplaySensorData:
+    """Display sensor data."""
+    def __init__(self, title="Clue Sensor Data", title_color=0xFFFFFF, scale=1, font=None):
+        import displayio
+        import terminalio
+        from adafruit_display_text import label
+
+        self._label = label
+        self._display = board.DISPLAY
+        self._font = terminalio.FONT
+        if font:
+            self._font = font
+
+        if len(title) > 60:
+            raise ValueError("Title must be 60 characters or less.")
+
+        title_group = displayio.Group()
+        title = label.Label(self._font, text=title, max_glyphs=60, color=title_color)
+        title.x = 0
+        title.y = 3
+        title_group.append(title)
+        self._y = title.y + 13
+
+        self.sensor_group = displayio.Group(max_size=20, scale=scale)
+        self.sensor_group.append(title_group)
+
+    def add_sensor(self, sensor, data_label=None, format=None, color=0xFFFFFF):
+        """Adds a line on the display below the title with chosen sensor data."""
+        if format:
+            text = format % sensor
+        else:
+            text = str(sensor)
+        if data_label:
+            text = data_label + text
+        data_label = self._label.Label(self._font, text=text, max_glyphs=len(text), color=color)
+        data_label.x = 0
+        data_label.y = self._y
+        self._y = data_label.y + 13
+        self.sensor_group.append(data_label)
+
+    def show(self):
+        self._display.show(self.sensor_group)
+
 class Clue:  # pylint: disable=too-many-instance-attributes, too-many-public-methods
     """Represents a single CLUE."""
     def __init__(self):
@@ -368,6 +411,11 @@ class Clue:  # pylint: disable=too-many-instance-attributes, too-many-public-met
         """
 
         return self.sound_level > sound_threshold
+
+    @staticmethod
+    def display_sensor_data(title="Clue Sensor Data", title_color=(255, 255, 255), scale=1, font=None):
+        return _DisplaySensorData(title=title, title_color=title_color, scale=scale, font=font)
+
 
 clue = Clue()  # pylint: disable=invalid-name
 """Object that is automatically created on import.
