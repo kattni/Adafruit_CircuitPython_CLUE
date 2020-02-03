@@ -24,7 +24,7 @@ class _DisplaySensorData:
 
         if not colors:
             colors = (0xFF00FF, 0x00FF00, 0xFF0000, 0x00FFFF, 0xFFFF00,
-                      0x0000FF, 0xFF00CC, 0x00CCFF, 0xFFA500, 0xCC00FF)
+                      0x0000FF, 0xFF00CC, 0x00AAFF, 0xFFA500, 0xCC00FF)
             # colors = ((255, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255), (255, 255, 0),
             #           (0, 0, 255), (255, 0, 180), (0, 180, 255), (255, 180, 0), (180, 0, 255))
 
