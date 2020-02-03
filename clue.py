@@ -16,10 +16,15 @@ import gamepad
 
 class _DisplaySensorData:
     """Display sensor data."""
-    def __init__(self, title="Clue Sensor Data", title_color=0xFFFFFF, scale=1, font=None):
+    def __init__(self, title="Clue Sensor Data", title_color=0xFFFFFF, title_scale=1,
+                 sensor_scale=1, font=None, num_sensors=1, colors=None):
         import displayio
         import terminalio
         from adafruit_display_text import label
+
+        if not colors:
+            colors = ((255, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255), (255, 255, 0),
+                      (0, 0, 255), (255, 0, 180), (0, 180, 255), (255, 180, 0), (180, 0, 255))
 
         self._label = label
         self._display = board.DISPLAY
@@ -30,32 +35,54 @@ class _DisplaySensorData:
         if len(title) > 60:
             raise ValueError("Title must be 60 characters or less.")
 
-        title_group = displayio.Group()
-        title = label.Label(self._font, text=title, max_glyphs=60, color=title_color)
+        title = label.Label(self._font, text=title, max_glyphs=60, color=title_color,
+                            scale=title_scale)
         title.x = 0
-        title.y = 3
-        title_group.append(title)
-        self._y = title.y + 13
+        title.y = 8
+        self._y = title.y + 20
 
-        self.sensor_group = displayio.Group(max_size=20, scale=scale)
-        self.sensor_group.append(title_group)
+        self.sensor_group = displayio.Group(max_size=20, scale=sensor_scale)
+        self.sensor_group.append(title)
 
-    def add_sensor(self, sensor, data_label=None, format=None, color=0xFFFFFF):
-        """Adds a line on the display below the title with chosen sensor data."""
+        self._lines = []
+        for num in range(num_sensors):
+            self._lines.append(self.add_text_line(color=colors[num]))
+
+    def __getitem__(self, item):
+        """Fetch the Nth text line Group"""
+        return self._lines[item]
+
+    def add_text_line(self, color=0xFFFFFF):
+        """Adds a line on the display of the specified color and returns the label object."""
+
+        sensor_data_label = self._label.Label(self._font, text="", max_glyphs=40, color=color)
+        sensor_data_label.x = 0
+        sensor_data_label.y = self._y
+        self._y = sensor_data_label.y + 13
+        self.sensor_group.append(sensor_data_label)
+
+        return sensor_data_label
+
+    @staticmethod
+    def format_text(sensor, data_label=None, format=None):
+        """Helper to formats a sensor value for display."""
+
         if format:
             text = format % sensor
         else:
             text = str(sensor)
         if data_label:
             text = data_label + text
-        data_label = self._label.Label(self._font, text=text, max_glyphs=len(text), color=color)
-        data_label.x = 0
-        data_label.y = self._y
-        self._y = data_label.y + 13
-        self.sensor_group.append(data_label)
+
+        return text
 
     def show(self):
         self._display.show(self.sensor_group)
+
+    def show_terminal(self):
+        """Revert to terminalio screen.
+        """
+        self._display.show(None)
 
 class Clue:  # pylint: disable=too-many-instance-attributes, too-many-public-methods
     """Represents a single CLUE."""
@@ -413,8 +440,11 @@ class Clue:  # pylint: disable=too-many-instance-attributes, too-many-public-met
         return self.sound_level > sound_threshold
 
     @staticmethod
-    def display_sensor_data(title="Clue Sensor Data", title_color=(255, 255, 255), scale=1, font=None):
-        return _DisplaySensorData(title=title, title_color=title_color, scale=scale, font=font)
+    def display_sensor_data(title="Clue Sensor Data", title_color=(255,255,255), title_scale=1,
+                            num_sensors=1, sensor_scale=1, font=None, colors=None):
+        return _DisplaySensorData(title=title, title_color=title_color, title_scale=title_scale,
+                                  sensor_scale=sensor_scale, font=font, num_sensors=num_sensors,
+                                  colors=colors)
 
 
 clue = Clue()  # pylint: disable=invalid-name
