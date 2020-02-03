@@ -23,8 +23,10 @@ class _DisplaySensorData:
         from adafruit_display_text import label
 
         if not colors:
-            colors = ((255, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255), (255, 255, 0),
-                      (0, 0, 255), (255, 0, 180), (0, 180, 255), (255, 180, 0), (180, 0, 255))
+            colors = (0xFF00FF, 0x00FF00, 0xFF0000, 0x00FFFF, 0xFFFF00,
+                      0x0000FF, 0xFF00CC, 0x00CCFF, 0xFFA500, 0xCC00FF)
+            # colors = ((255, 0, 255), (0, 255, 0), (255, 0, 0), (0, 255, 255), (255, 255, 0),
+            #           (0, 0, 255), (255, 0, 180), (0, 180, 255), (255, 180, 0), (180, 0, 255))
 
         self._label = label
         self._display = board.DISPLAY
@@ -55,7 +57,7 @@ class _DisplaySensorData:
     def add_text_line(self, color=0xFFFFFF):
         """Adds a line on the display of the specified color and returns the label object."""
 
-        sensor_data_label = self._label.Label(self._font, text="", max_glyphs=40, color=color)
+        sensor_data_label = self._label.Label(self._font, text="", max_glyphs=45, color=color)
         sensor_data_label.x = 0
         sensor_data_label.y = self._y
         self._y = sensor_data_label.y + 13
@@ -67,8 +69,7 @@ class _DisplaySensorData:
         self._display.show(self.sensor_group)
 
     def show_terminal(self):
-        """Revert to terminalio screen.
-        """
+        """Revert to terminalio screen."""
         self._display.show(None)
 
 class Clue:  # pylint: disable=too-many-instance-attributes, too-many-public-methods
