@@ -6,14 +6,14 @@ import digitalio
 import audiobusio
 import audiopwmio
 import audiocore
+import gamepad
+import touchio
 import neopixel
 import adafruit_bmp280
 import adafruit_sht31d
 import adafruit_apds9960.apds9960
 import adafruit_lis3mdl
 import adafruit_lsm6ds
-import gamepad
-import touchio
 
 class _DisplayClueData:
     """Display sensor data."""
